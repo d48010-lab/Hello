@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>College Companion</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <h1>College Companion</h1>
+        <p>Track classes, assignments, and your day in one place.</p>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Today's Timetable</h2>
+          <ul id="timetable" class="list"></ul>
+        </article>
+
+        <article class="card">
+          <h2>Add Assignment</h2>
+          <form id="assignmentForm" class="form">
+            <label>
+              Title
+              <input id="titleInput" type="text" placeholder="e.g. Database Lab Report" required />
+            </label>
+            <label>
+              Due Date
+              <input id="dueDateInput" type="date" required />
+            </label>
+            <button type="submit">Add</button>
+          </form>
+        </article>
+
+        <article class="card full-width">
+          <div class="card-header">
+            <h2>Assignments</h2>
+            <span id="assignmentCount" class="badge">0 pending</span>
+          </div>
+          <ul id="assignmentList" class="list"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
