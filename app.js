@@ -4,8 +4,14 @@ const timetableItems = [
   { subject: 'Software Engineering', time: '12:00 - 13:00', room: 'B-101' },
 ];
 
+const STORAGE_KEYS = {
+  assignments: 'college_companion_assignments_v1',
+  history: 'college_companion_study_history_v1',
+};
+
 const timetableList = document.getElementById('timetable');
 const assignmentList = document.getElementById('assignmentList');
+const historyList = document.getElementById('historyList');
 const assignmentCount = document.getElementById('assignmentCount');
 const assignmentForm = document.getElementById('assignmentForm');
 const titleInput = document.getElementById('titleInput');
@@ -18,11 +24,53 @@ const goalInput = document.getElementById('goalInput');
 const startDateInput = document.getElementById('startDateInput');
 const timeInput = document.getElementById('timeInput');
 const aiOutput = document.getElementById('aiOutput');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-let assignments = [
-  { id: crypto.randomUUID(), title: 'Computer Networks Quiz', dueDate: '2026-04-12' },
-  { id: crypto.randomUUID(), title: 'OS Notes Submission', dueDate: '2026-04-15' },
-];
+function loadAssignments() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.assignments);
+    if (!raw) {
+      return [
+        { id: crypto.randomUUID(), title: 'Computer Networks Quiz', dueDate: '2026-04-12', done: false },
+        { id: crypto.randomUUID(), title: 'OS Notes Submission', dueDate: '2026-04-15', done: false },
+      ];
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.history);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+let assignments = loadAssignments();
+let studyHistory = loadHistory();
+
+function saveAssignments() {
+  localStorage.setItem(STORAGE_KEYS.assignments, JSON.stringify(assignments));
+}
+
+function saveHistory() {
+  localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(studyHistory));
+}
 
 function renderTimetable() {
   timetableList.innerHTML = '';
@@ -44,7 +92,8 @@ function formatDate(isoDate) {
 }
 
 function updateCount() {
-  assignmentCount.textContent = `${assignments.length} pending`;
+  const pendingCount = assignments.filter((item) => !item.done).length;
+  assignmentCount.textContent = `${pendingCount} pending`;
 }
 
 function renderAssignments() {
@@ -64,7 +113,7 @@ function renderAssignments() {
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
     .forEach((assignment) => {
       const li = document.createElement('li');
-      li.className = 'item';
+      li.className = `item ${assignment.done ? 'item-done' : ''}`;
       li.innerHTML = `
         <div>
           <strong>${assignment.title}</strong><br />
@@ -72,37 +121,79 @@ function renderAssignments() {
         </div>
       `;
 
+      const controls = document.createElement('div');
+      controls.className = 'row-actions';
+
+      const doneButton = document.createElement('button');
+      doneButton.className = 'secondary-btn';
+      doneButton.type = 'button';
+      doneButton.textContent = assignment.done ? 'Undo' : 'Done';
+      doneButton.addEventListener('click', () => {
+        assignments = assignments.map((item) => {
+          if (item.id !== assignment.id) {
+            return item;
+          }
+
+          return { ...item, done: !item.done };
+        });
+
+        saveAssignments();
+        renderAssignments();
+      });
+
       const removeButton = document.createElement('button');
       removeButton.className = 'delete-btn';
       removeButton.type = 'button';
       removeButton.textContent = 'Remove';
       removeButton.addEventListener('click', () => {
         assignments = assignments.filter((item) => item.id !== assignment.id);
+        saveAssignments();
         renderAssignments();
       });
 
-      li.appendChild(removeButton);
+      controls.append(doneButton, removeButton);
+      li.appendChild(controls);
       assignmentList.appendChild(li);
     });
 
   updateCount();
 }
 
+function renderHistory() {
+  historyList.innerHTML = '';
+
+  if (studyHistory.length === 0) {
+    const emptyState = document.createElement('li');
+    emptyState.className = 'empty';
+    emptyState.textContent = 'No study plans generated yet.';
+    historyList.appendChild(emptyState);
+    return;
+  }
+
+  studyHistory
+    .slice()
+    .reverse()
+    .forEach((entry) => {
+      const li = document.createElement('li');
+      li.className = 'item';
+      li.innerHTML = `
+        <div>
+          <strong>${entry.subject} - ${entry.topic}</strong><br />
+          <small>${entry.goalLabel} · ${entry.minutes} min/day · Start ${formatDate(entry.startDate)}</small>
+        </div>
+      `;
+      historyList.appendChild(li);
+    });
+}
+
 function getGoalLabel(goalType) {
-  if (goalType === 'exam') {
-    return 'Exam Prep';
-  }
-
-  if (goalType === 'assignment') {
-    return 'Assignment Work';
-  }
-
+  if (goalType === 'exam') return 'Exam Prep';
+  if (goalType === 'assignment') return 'Assignment Work';
   return 'Lecture Revision';
 }
 
 function getSubjectHelper(subject, topic) {
   const normalized = subject.trim().toLowerCase();
-
   const helpers = {
     chemistry: `Chemistry helper: focus on reaction mechanisms, periodic trends, and solving at least 3 numericals on ${topic}.`,
     botany: `Botany helper: sketch labeled diagrams, memorize plant terms, and revise taxonomy linked to ${topic}.`,
@@ -117,11 +208,12 @@ function getSubjectHelper(subject, topic) {
 }
 
 function assignmentPriorityHint() {
-  if (assignments.length === 0) {
+  const pending = assignments.filter((item) => !item.done);
+  if (pending.length === 0) {
     return 'No pending assignment pressure right now. Use 10 minutes to organize next week topics.';
   }
 
-  const sorted = assignments.slice().sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const sorted = pending.slice().sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const next = sorted[0];
   return `Nearest deadline: ${next.title} (${formatDate(next.dueDate)}).`;
 }
@@ -198,6 +290,21 @@ function renderStudyPlan(subject, topic, goalType, startDate, minutes) {
       </li>
     </ol>
   `;
+
+  studyHistory.push({
+    subject,
+    topic,
+    goalLabel: getGoalLabel(goalType),
+    minutes,
+    startDate,
+  });
+
+  if (studyHistory.length > 15) {
+    studyHistory = studyHistory.slice(-15);
+  }
+
+  saveHistory();
+  renderHistory();
 }
 
 assignmentForm.addEventListener('submit', (event) => {
@@ -207,8 +314,10 @@ assignmentForm.addEventListener('submit', (event) => {
     id: crypto.randomUUID(),
     title: titleInput.value.trim(),
     dueDate: dueDateInput.value,
+    done: false,
   });
 
+  saveAssignments();
   assignmentForm.reset();
   titleInput.focus();
   renderAssignments();
@@ -226,7 +335,14 @@ aiForm.addEventListener('submit', (event) => {
   renderStudyPlan(subject, topic, goalType, startDate, minutes);
 });
 
+clearHistoryBtn.addEventListener('click', () => {
+  studyHistory = [];
+  saveHistory();
+  renderHistory();
+});
+
 startDateInput.value = new Date().toISOString().slice(0, 10);
 
 renderTimetable();
 renderAssignments();
+renderHistory();

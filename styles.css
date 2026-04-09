@@ -162,3 +162,26 @@ button:hover {
   margin: 0.25rem 0 0;
   padding-left: 1rem;
 }
+
+
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.secondary-btn {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.secondary-btn:hover {
+  background: #cbd5e1;
+}
+
+.item-done {
+  opacity: 0.72;
+}
+
+.item-done strong {
+  text-decoration: line-through;
+}
