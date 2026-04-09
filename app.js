@@ -100,6 +100,22 @@ function getGoalLabel(goalType) {
   return 'Lecture Revision';
 }
 
+function getSubjectHelper(subject, topic) {
+  const normalized = subject.trim().toLowerCase();
+
+  const helpers = {
+    chemistry: `Chemistry helper: focus on reaction mechanisms, periodic trends, and solving at least 3 numericals on ${topic}.`,
+    botany: `Botany helper: sketch labeled diagrams, memorize plant terms, and revise taxonomy linked to ${topic}.`,
+    zoology: `Zoology helper: map body systems, compare species features, and practice short definitions from ${topic}.`,
+    mathematics: `Mathematics helper: solve problems step-by-step, check formulas, and redo 2 incorrect sums from ${topic}.`,
+    physics: `Physics helper: list core laws, derive key equations, and solve conceptual + numerical questions on ${topic}.`,
+    english: `English helper: practice one reading passage, 2 writing points, and vocabulary revision related to ${topic}.`,
+    biology: `Biology helper: use active recall with labeled diagrams, cycles/process flowcharts, and key terminology from ${topic}.`,
+  };
+
+  return helpers[normalized] || `General helper: break ${topic} into concepts, examples, and quick revision questions.`;
+}
+
 function assignmentPriorityHint() {
   if (assignments.length === 0) {
     return 'No pending assignment pressure right now. Use 10 minutes to organize next week topics.';
@@ -160,6 +176,7 @@ function renderStudyPlan(subject, topic, goalType, startDate, minutes) {
     <h3>${subject}: ${topic}</h3>
     <p><strong>Goal:</strong> ${getGoalLabel(goalType)} · <strong>Session:</strong> ${minutes} minutes/day</p>
     <p><strong>Plan:</strong> 3-day college study sprint starting ${dayOneDate}</p>
+    <p><strong>Subject helper:</strong> ${getSubjectHelper(subject, topic)}</p>
     <ol class="plan-days">
       <li>
         <strong>Day 1 - ${dayOneDate}</strong>
