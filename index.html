@@ -34,6 +34,40 @@
           </form>
         </article>
 
+        <article class="card">
+          <h2>AI College Study Coach</h2>
+          <form id="aiForm" class="form">
+            <label>
+              Course
+              <input id="subjectInput" type="text" placeholder="e.g. CS-201 Data Structures" required />
+            </label>
+            <label>
+              Topic to Learn
+              <input id="topicInput" type="text" placeholder="e.g. Trees and Graph Traversal" required />
+            </label>
+            <label>
+              Goal Type
+              <select id="goalInput" required>
+                <option value="exam">Exam Prep</option>
+                <option value="assignment">Assignment Work</option>
+                <option value="revision">Lecture Revision</option>
+              </select>
+            </label>
+            <label>
+              Plan Start Date
+              <input id="startDateInput" type="date" required />
+            </label>
+            <label>
+              Time Available (minutes)
+              <input id="timeInput" type="number" min="10" max="240" step="5" value="60" required />
+            </label>
+            <button type="submit">Generate Step-by-Step Plan</button>
+          </form>
+          <div id="aiOutput" class="ai-output" aria-live="polite">
+            Add your course and topic to get a college-focused step-by-step study plan.
+          </div>
+        </article>
+
         <article class="card full-width">
           <div class="card-header">
             <h2>Assignments</h2>
